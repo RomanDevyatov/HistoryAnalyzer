@@ -17,7 +17,7 @@ public class FileUtility {
     protected void createFolder(String path) {
         String pathToOtchetTxtFile = String.valueOf(Paths.get(path, ChromeHistoryAnalyzer.OTCHET_FOLDER_NAME));
         String msg = "Folder " + pathToOtchetTxtFile;
-        msg += new File(pathToOtchetTxtFile).mkdirs() ? " is created" : " already exists!";
+        msg += new File(pathToOtchetTxtFile).mkdirs() ? " is created" : " already exists";
         log.info(msg);
     }
 
