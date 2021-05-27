@@ -46,7 +46,7 @@ public class ChromeHistoryAnalyzer extends FileUtility {
     private static final String OTCHET_EXCEL_FILE_NAME = "GeneralOtchet";
     private static final String OTCHET_EXCEL_FILE_NAME_FORMAT = ".xls";
     private static final String USER_NAME_COL_NAME = "User";
-    private static final String UNDEFINED_STRING = "none";
+    private static final String ZERO_STRING = "0";
     private static final SimpleDateFormat standardDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     private static final Pattern FILE_NAME_PATTERN = Pattern.compile(".*_historyRes_\\d{4}-\\d{2}-\\d{2}\\.txt",
@@ -157,7 +157,7 @@ public class ChromeHistoryAnalyzer extends FileUtility {
                 HSSFRow newRow = sheet.createRow((short) (k + 2));
                 newRow.createCell(0).setCellValue(userNameHistory.get(k));
                 for (int t = 0; t < datesHistory.size(); t++) {
-                    String value = Optional.ofNullable(table[k][t]).orElse(UNDEFINED_STRING);
+                    String value = Optional.ofNullable(table[k][t]).orElse(ZERO_STRING);
                     newRow.createCell(t + 1).setCellValue(value);
                 }
             }
