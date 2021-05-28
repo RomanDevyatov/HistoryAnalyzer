@@ -17,7 +17,7 @@ public class Main {
             chromeHistoryAnalyzer.startStatisticProcess();
             log.info("Program has finished.");
         } catch (Exception e) {
-            log.severe("Proogram has finished with error: " + e.getMessage());
+            log.severe("Program has finished with error: " + e.getMessage());
             System.exit(-1);
         }
     }

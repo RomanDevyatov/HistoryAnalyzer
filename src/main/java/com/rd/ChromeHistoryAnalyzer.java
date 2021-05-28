@@ -47,6 +47,7 @@ public class ChromeHistoryAnalyzer extends FileUtility {
     private static final String OTCHET_EXCEL_FILE_NAME_FORMAT = ".xls";
     private static final String USER_NAME_COL_NAME = "User";
     private static final String ZERO_STRING = "0";
+    private static final String MOS_STRING = "MOS"; // it's for MOS only
     private static final SimpleDateFormat standardDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     private static final Pattern FILE_NAME_PATTERN = Pattern.compile(".*_historyRes_\\d{4}-\\d{2}-\\d{2}\\.txt",
@@ -143,7 +144,7 @@ public class ChromeHistoryAnalyzer extends FileUtility {
             log.info("Creating XLS file, OK");
             Date date = new Date();
             String formattedDate = standardDateFormat.format(date);
-            String excelFileName = OTCHET_EXCEL_FILE_NAME + fileNameDateFormat.format(date) + OTCHET_EXCEL_FILE_NAME_FORMAT;
+            String excelFileName = MOS_STRING + OTCHET_EXCEL_FILE_NAME + fileNameDateFormat.format(date) + OTCHET_EXCEL_FILE_NAME_FORMAT;
             String filename = this.generalFolderFullPath + "/" + OTCHET_FOLDER_NAME + "/" + excelFileName;
             HSSFWorkbook workbook = new HSSFWorkbook();
             HSSFSheet sheet = workbook.createSheet(OTCHET_SHEET_NAME);
