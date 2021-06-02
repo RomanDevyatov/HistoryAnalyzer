@@ -46,7 +46,6 @@ public class ChromeHistoryAnalyzer extends FileUtility {
     private static final String OTCHET_EXCEL_FILE_NAME = "GeneralOtchet";
     private static final String OTCHET_EXCEL_FILE_NAME_FORMAT = ".xls";
     private static final String USER_NAME_COL_NAME = "User";
-    private static final String ZERO_STRING = "0";
     private static final String MOS_STRING = "MOS"; // it's for MOS only
     private static final SimpleDateFormat standardDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
@@ -82,7 +81,7 @@ public class ChromeHistoryAnalyzer extends FileUtility {
         readUserNameAndDate(listOfFiles, userNameHistory, datesHistory);
         log.info("Got table fields");
         Collections.sort(datesHistory);
-        String[][] table = fillTableWithVisitInfo(listOfFiles, userNameHistory, datesHistory);
+        Integer[][] table = fillTableWithVisitInfo(listOfFiles, userNameHistory, datesHistory);
         createOtchetXLS(userNameHistory, datesHistory, table);
     }
 
@@ -103,9 +102,9 @@ public class ChromeHistoryAnalyzer extends FileUtility {
                 });
     }
 
-    private String[][] fillTableWithVisitInfo(List<File> listOfFiles, List<String> userNameHistory, List<String> datesHistory) {
+    private Integer[][] fillTableWithVisitInfo(List<File> listOfFiles, List<String> userNameHistory, List<String> datesHistory) {
         //String pathToResultHistory = this.generalFolderFullPath + "/" + RESULT_HISTORY_FOLDER_NAME_PATH;
-        String[][] table = new String[userNameHistory.size()][datesHistory.size()]; // 1 - arg user, 2 - date
+        Integer[][] table = new Integer[userNameHistory.size()][datesHistory.size()]; // 1 - arg user, 2 - date
         AtomicInteger userInd = new AtomicInteger(0);
         AtomicReference<String> prevUser = new AtomicReference<>(StringUtils.substringBefore(listOfFiles.get(0).getName(), HISTORY_RES));
         listOfFiles.forEach(file -> {
@@ -121,7 +120,7 @@ public class ChromeHistoryAnalyzer extends FileUtility {
                 int dateInd = datesHistory.indexOf(date);
                 String currFullFileName = file.getAbsolutePath();
                 try {
-                    table[userInd.get()][dateInd] = String.valueOf(countNewVisits(currFullFileName));
+                    table[userInd.get()][dateInd] = countNewVisits(currFullFileName);
                 } catch (IOException ioException) {
                     log.severe("Error while getting countNewVisita: " + ioException.getMessage());
                 }
@@ -139,12 +138,12 @@ public class ChromeHistoryAnalyzer extends FileUtility {
         return false;
     }
 
-    private void createOtchetXLS(List<String> userNameHistory, List<String> datesHistory, String[][] table) {
+    private void createOtchetXLS(List<String> userNameHistory, List<String> datesHistory, Integer[][] table) {
         try {
             log.info("Creating XLS file, OK");
             Date date = new Date();
             String formattedDate = standardDateFormat.format(date);
-            String excelFileName = MOS_STRING + OTCHET_EXCEL_FILE_NAME + fileNameDateFormat.format(date) + OTCHET_EXCEL_FILE_NAME_FORMAT;
+            String excelFileName = OTCHET_EXCEL_FILE_NAME + fileNameDateFormat.format(date) + OTCHET_EXCEL_FILE_NAME_FORMAT;
             String filename = this.generalFolderFullPath + "/" + OTCHET_FOLDER_NAME + "/" + excelFileName;
             HSSFWorkbook workbook = new HSSFWorkbook();
             HSSFSheet sheet = workbook.createSheet(OTCHET_SHEET_NAME);
@@ -158,7 +157,7 @@ public class ChromeHistoryAnalyzer extends FileUtility {
                 HSSFRow newRow = sheet.createRow((short) (k + 2));
                 newRow.createCell(0).setCellValue(userNameHistory.get(k));
                 for (int t = 0; t < datesHistory.size(); t++) {
-                    String value = Optional.ofNullable(table[k][t]).orElse(ZERO_STRING);
+                    Integer value = Optional.ofNullable(table[k][t]).orElse(0);
                     newRow.createCell(t + 1).setCellValue(value);
                 }
             }
