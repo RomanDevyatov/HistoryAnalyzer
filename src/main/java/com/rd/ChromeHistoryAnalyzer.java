@@ -135,6 +135,7 @@ public class ChromeHistoryAnalyzer extends FileUtility {
             return true;
         }
         log.severe("Incorrect file name format: " + fileName);
+
         return false;
     }
 
@@ -185,6 +186,7 @@ public class ChromeHistoryAnalyzer extends FileUtility {
             }
         }
         bfReader.close();
+
         return visitNumber;
     }
 }
