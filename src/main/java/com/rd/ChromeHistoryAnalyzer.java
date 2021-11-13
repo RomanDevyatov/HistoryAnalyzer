@@ -151,7 +151,7 @@ public class ChromeHistoryAnalyzer extends FileUtility {
             log.info("Creating XLS file, OK");
             Date date = new Date();
             String formattedDate = standardDateFormat.format(date);
-            String excelFileName = OTCHET_EXCEL_FILE_NAME + fileNameDateFormat.format(date) + OTCHET_EXCEL_FILE_NAME_FORMAT;
+            String excelFileName = MOS_STRING + OTCHET_EXCEL_FILE_NAME + fileNameDateFormat.format(date) + OTCHET_EXCEL_FILE_NAME_FORMAT;
             String filename = this.generalFolderFullPath + "/" + OTCHET_FOLDER_NAME + "/" + excelFileName;
             HSSFWorkbook workbook = new HSSFWorkbook();
             HSSFSheet sheet = workbook.createSheet(OTCHET_SHEET_NAME);
@@ -165,22 +165,12 @@ public class ChromeHistoryAnalyzer extends FileUtility {
 
             // tableIndex corresponds to table, sheetIndex correspond sheet
             for (int tableIndex = 0, sheetIndex = 0; tableIndex < datesHistory.size(); tableIndex++, sheetIndex++) {
-                if (tableIndex > 0) {
-                    String prevDateHist = datesHistory.get(tableIndex - 1);
-                    String currentDateHist = datesHistory.get(tableIndex);
+                String currentDateHist = datesHistory.get(tableIndex);
+                LocalDate currentLocalDate = LocalDate.parse(currentDateHist);
 
-                    LocalDate prevLocalDate = LocalDate.parse(prevDateHist);
-                    LocalDate currentLocalDate = LocalDate.parse(currentDateHist);
-                    long diffDays = ChronoUnit.DAYS.between(prevLocalDate, currentLocalDate);
-
-                    if (diffDays > 1) {
-                        LocalDate beforeCurrentDate = prevLocalDate;
-                        while (diffDays-- > 1) {
-                            beforeCurrentDate = beforeCurrentDate.plusDays(1);
-                            String dateString = beforeCurrentDate.format(localDateFormater);
-                            addEmptyRow(sheet, sheetIndex++, dateString);
-                        }
-                    }
+                if (tableIndex > 0 && tableIndex < datesHistory.size() - 1) {
+                    String prevDateHistString = datesHistory.get(tableIndex - 1);
+                    sheetIndex = addEmptyStrings(sheet, sheetIndex, LocalDate.parse(prevDateHistString), currentLocalDate);
                 }
 
                 HSSFRow newRow = sheet.createRow((short) (sheetIndex + 2));
@@ -189,7 +179,17 @@ public class ChromeHistoryAnalyzer extends FileUtility {
                     Integer value = Optional.ofNullable(table[t][tableIndex]).orElse(0);
                     newRow.createCell(t + 1).setCellValue(value);
                 }
+
+                if (tableIndex == datesHistory.size() - 1) { // while not the last element
+                    LocalDate prevLocalDate = currentLocalDate.plusDays(1);
+
+                    LocalDate lastDayOfCurrentMonth = currentLocalDate.with(TemporalAdjusters.lastDayOfMonth());
+                    currentLocalDate = lastDayOfCurrentMonth.plusDays(1);
+
+                    addEmptyStrings(sheet, sheetIndex, prevLocalDate, currentLocalDate);
+                }
             }
+
             IntStream.range(0, datesHistory.size() + 1)
                     .forEach(sheet::autoSizeColumn);
 
@@ -201,6 +201,20 @@ public class ChromeHistoryAnalyzer extends FileUtility {
         } catch ( Exception ex ) {
             log.severe("Error while generating excel file: " + ex.getMessage());
         }
+    }
+
+    private int addEmptyStrings(HSSFSheet sheet, int sheetIndex, LocalDate prevLocalDate, LocalDate currentLocalDate) {
+        long cntDaysBetweenDates = ChronoUnit.DAYS.between(prevLocalDate, currentLocalDate);
+
+        if (cntDaysBetweenDates > 1) {
+            LocalDate beforeCurrentDate = prevLocalDate;
+            while (cntDaysBetweenDates-- > 1) {
+                beforeCurrentDate = beforeCurrentDate.plusDays(1);
+                String dateString = beforeCurrentDate.format(localDateFormater);
+                addEmptyRow(sheet, sheetIndex++, dateString);
+            }
+        }
+        return sheetIndex;
     }
 
     private void addEmptyRow(HSSFSheet sheet, Integer sheetIndex, String date) {
