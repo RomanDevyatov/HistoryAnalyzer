@@ -12,8 +12,12 @@ public class Main {
         try {
             log.info("program started at " + (new GregorianCalendar()).toZonedDateTime());
             String generalFolderPath = args[0];
+            String searchingString = "";
+            if (args.length == 2) {
+                searchingString = args[1];
+            }
             log.info("Args: " + Arrays.stream(args));
-            ChromeHistoryAnalyzer chromeHistoryAnalyzer = new ChromeHistoryAnalyzer(generalFolderPath);
+            ChromeHistoryAnalyzer chromeHistoryAnalyzer = new ChromeHistoryAnalyzer(generalFolderPath, searchingString);
             chromeHistoryAnalyzer.startStatisticProcess();
             log.info("Program has finished.");
         } catch (Exception e) {

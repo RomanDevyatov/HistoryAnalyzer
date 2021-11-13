@@ -12,6 +12,11 @@ import java.io.IOException;
 import java.io.FileOutputStream;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.text.SimpleDateFormat;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -38,6 +43,7 @@ public class ChromeHistoryAnalyzer extends FileUtility {
     private static final String HISTORY_RES = "_historyRes_";
     private static final String TXT_FORMAT = ".txt";
     private static final SimpleDateFormat fileNameDateFormat = new SimpleDateFormat("_yyyy-MM-dd_HH_mm_ss");
+    private static final DateTimeFormatter localDateFormater = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final String OTCHET_EXCEL_FILE_NAME = "GeneralOtchet";
     private static final String OTCHET_EXCEL_FILE_NAME_FORMAT = ".xls";
     private static final String USER_NAME_COL_NAME = "User";
@@ -48,10 +54,14 @@ public class ChromeHistoryAnalyzer extends FileUtility {
             Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
 
     private final String generalFolderFullPath;
+    private String searchingString = "contactsOpened=true";
 
-    public ChromeHistoryAnalyzer(String path) {
+    public ChromeHistoryAnalyzer(String path, String searchingString) {
         log.setLevel(Level.INFO);
         this.generalFolderFullPath = path;
+        if (StringUtils.isNotBlank(searchingString)) {
+            this.searchingString = searchingString;
+        }
         createFolder(this.generalFolderFullPath);
     }
 
@@ -136,40 +146,12 @@ public class ChromeHistoryAnalyzer extends FileUtility {
         return false;
     }
 
-    private int getDayNumberFromDateString(String date) {
-        return Integer.valueOf(StringUtils.substringBetween(date, "-", TXT_FORMAT));
-    }
-
-    private int getMonthNumberFromDateString(String date) {
-        return Integer.valueOf(StringUtils.substringBetween(date, "-", "-"));
-    }
-
-    private boolean equalMonth(String startDateFrom, String nextDateString) {
-        int monthOfStartDate = getMonthNumberFromDateString(startDateFrom);
-        int monthOfNextDate = getMonthNumberFromDateString(nextDateString);
-
-        return monthOfStartDate == monthOfNextDate;
-    }
-
-    private String getIncreasedStringDate(String date) {
-        String result = "";
-        if (date != null) {
-            int dateLen = date.length();
-            if (dateLen > 1) {
-                result = date.substring(0, dateLen - 2);
-                int number = Integer.valueOf(date.substring(dateLen - 2));
-                result += String.valueOf(number);
-            }
-        }
-        return result;
-    }
-
     private void createOtchetXLS(List<String> userNameHistory, List<String> datesHistory, Integer[][] table) {
         try {
             log.info("Creating XLS file, OK");
             Date date = new Date();
             String formattedDate = standardDateFormat.format(date);
-            String excelFileName = MOS_STRING + OTCHET_EXCEL_FILE_NAME + fileNameDateFormat.format(date) + OTCHET_EXCEL_FILE_NAME_FORMAT;
+            String excelFileName = OTCHET_EXCEL_FILE_NAME + fileNameDateFormat.format(date) + OTCHET_EXCEL_FILE_NAME_FORMAT;
             String filename = this.generalFolderFullPath + "/" + OTCHET_FOLDER_NAME + "/" + excelFileName;
             HSSFWorkbook workbook = new HSSFWorkbook();
             HSSFSheet sheet = workbook.createSheet(OTCHET_SHEET_NAME);
@@ -178,23 +160,33 @@ public class ChromeHistoryAnalyzer extends FileUtility {
             HSSFRow rowhead = sheet.createRow((short)1);
             rowhead.createCell(0).setCellValue(USER_NAME_COL_NAME);
             AtomicInteger counter = new AtomicInteger(0);
-//            datesHistory.forEach(element -> rowhead.createCell(counter.getAndIncrement() + 1).setCellValue(element));
-//            for (int k = 0; k < userNameHistory.size(); k++) {
-//                HSSFRow newRow = sheet.createRow((short) (k + 2));
-//                newRow.createCell(0).setCellValue(userNameHistory.get(k));
-//                for (int t = 0; t < datesHistory.size(); t++) {
-//                    Integer value = Optional.ofNullable(table[k][t]).orElse(0);
-//                    newRow.createCell(t + 1).setCellValue(value);
-//                }
-//            }
 
             userNameHistory.forEach(element -> rowhead.createCell(counter.getAndIncrement() + 1).setCellValue(element));
 
-            for (int k = 0; k < datesHistory.size(); k++) {
-                HSSFRow newRow = sheet.createRow((short) (k + 2));
-                newRow.createCell(0).setCellValue(datesHistory.get(k));
+            // tableIndex corresponds to table, sheetIndex correspond sheet
+            for (int tableIndex = 0, sheetIndex = 0; tableIndex < datesHistory.size(); tableIndex++, sheetIndex++) {
+                if (tableIndex > 0) {
+                    String prevDateHist = datesHistory.get(tableIndex - 1);
+                    String currentDateHist = datesHistory.get(tableIndex);
+
+                    LocalDate prevLocalDate = LocalDate.parse(prevDateHist);
+                    LocalDate currentLocalDate = LocalDate.parse(currentDateHist);
+                    long diffDays = ChronoUnit.DAYS.between(prevLocalDate, currentLocalDate);
+
+                    if (diffDays > 1) {
+                        LocalDate beforeCurrentDate = prevLocalDate;
+                        while (diffDays-- > 1) {
+                            beforeCurrentDate = beforeCurrentDate.plusDays(1);
+                            String dateString = beforeCurrentDate.format(localDateFormater);
+                            addEmptyRow(sheet, sheetIndex++, dateString);
+                        }
+                    }
+                }
+
+                HSSFRow newRow = sheet.createRow((short) (sheetIndex + 2));
+                newRow.createCell(0).setCellValue(datesHistory.get(tableIndex));
                 for (int t = 0; t < userNameHistory.size(); t++) {
-                    Integer value = Optional.ofNullable(table[t][k]).orElse(0);
+                    Integer value = Optional.ofNullable(table[t][tableIndex]).orElse(0);
                     newRow.createCell(t + 1).setCellValue(value);
                 }
             }
@@ -211,6 +203,11 @@ public class ChromeHistoryAnalyzer extends FileUtility {
         }
     }
 
+    private void addEmptyRow(HSSFSheet sheet, Integer sheetIndex, String date) {
+        HSSFRow emptyRow = sheet.createRow((short) (sheetIndex + 2));
+        emptyRow.createCell(0).setCellValue(date);
+    }
+
     private int countNewVisits(String filePath) throws IOException {
         Set<String> recSet = new HashSet<>();
         FileInputStream inputStream = new FileInputStream(filePath);
@@ -223,7 +220,7 @@ public class ChromeHistoryAnalyzer extends FileUtility {
         bfReader.close();
 
         for (String s : recSet) {
-            if (StringUtils.contains(s, HH_RU_CONTACTS_OPENED_TRUE)) {
+            if (StringUtils.contains(s, this.searchingString)) {
                 visitNumber++;
             }
         }
