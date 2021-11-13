@@ -151,7 +151,7 @@ public class ChromeHistoryAnalyzer extends FileUtility {
             log.info("Creating XLS file, OK");
             Date date = new Date();
             String formattedDate = standardDateFormat.format(date);
-            String excelFileName = MOS_STRING + OTCHET_EXCEL_FILE_NAME + fileNameDateFormat.format(date) + OTCHET_EXCEL_FILE_NAME_FORMAT;
+            String excelFileName = OTCHET_EXCEL_FILE_NAME + fileNameDateFormat.format(date) + OTCHET_EXCEL_FILE_NAME_FORMAT;
             String filename = this.generalFolderFullPath + "/" + OTCHET_FOLDER_NAME + "/" + excelFileName;
             HSSFWorkbook workbook = new HSSFWorkbook();
             HSSFSheet sheet = workbook.createSheet(OTCHET_SHEET_NAME);
@@ -181,12 +181,12 @@ public class ChromeHistoryAnalyzer extends FileUtility {
                 }
 
                 if (tableIndex == datesHistory.size() - 1) { // while not the last element
-                    LocalDate prevLocalDate = currentLocalDate.plusDays(1);
+                    LocalDate prevLocalDate = currentLocalDate;
 
                     LocalDate lastDayOfCurrentMonth = currentLocalDate.with(TemporalAdjusters.lastDayOfMonth());
                     currentLocalDate = lastDayOfCurrentMonth.plusDays(1);
 
-                    addEmptyStrings(sheet, sheetIndex, prevLocalDate, currentLocalDate);
+                    addEmptyStrings(sheet, ++sheetIndex, prevLocalDate, currentLocalDate);
                 }
             }
 
