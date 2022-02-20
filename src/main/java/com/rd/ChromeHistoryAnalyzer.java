@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.io.FileOutputStream;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -151,7 +150,7 @@ public class ChromeHistoryAnalyzer extends FileUtility {
             log.info("Creating XLS file, OK");
             Date date = new Date();
             String formattedDate = standardDateFormat.format(date);
-            String excelFileName = OTCHET_EXCEL_FILE_NAME + fileNameDateFormat.format(date) + OTCHET_EXCEL_FILE_NAME_FORMAT;
+            String excelFileName = MOS_STRING + OTCHET_EXCEL_FILE_NAME + fileNameDateFormat.format(date) + OTCHET_EXCEL_FILE_NAME_FORMAT;
             String filename = this.generalFolderFullPath + "/" + OTCHET_FOLDER_NAME + "/" + excelFileName;
             HSSFWorkbook workbook = new HSSFWorkbook();
             HSSFSheet sheet = workbook.createSheet(OTCHET_SHEET_NAME);
@@ -167,10 +166,10 @@ public class ChromeHistoryAnalyzer extends FileUtility {
             for (int tableIndex = 0, sheetIndex = 0; tableIndex < datesHistory.size(); tableIndex++, sheetIndex++) {
                 String currentDateHist = datesHistory.get(tableIndex);
                 LocalDate currentLocalDate = LocalDate.parse(currentDateHist);
-
+                // check if there more then 1 days between dates
                 if (tableIndex > 0 && tableIndex < datesHistory.size() - 1) {
                     String prevDateHistString = datesHistory.get(tableIndex - 1);
-                    sheetIndex = addEmptyStrings(sheet, sheetIndex, LocalDate.parse(prevDateHistString), currentLocalDate);
+                    sheetIndex = addEmptyStrings(sheet, sheetIndex, LocalDate.parse(prevDateHistString), currentLocalDate, userNameHistory);
                 }
 
                 HSSFRow newRow = sheet.createRow((short) (sheetIndex + 2));
@@ -186,7 +185,7 @@ public class ChromeHistoryAnalyzer extends FileUtility {
                     LocalDate lastDayOfCurrentMonth = currentLocalDate.with(TemporalAdjusters.lastDayOfMonth());
                     currentLocalDate = lastDayOfCurrentMonth.plusDays(1);
 
-                    addEmptyStrings(sheet, ++sheetIndex, prevLocalDate, currentLocalDate);
+                    addEmptyStrings(sheet, ++sheetIndex, prevLocalDate, currentLocalDate, userNameHistory);
                 }
             }
 
@@ -203,7 +202,7 @@ public class ChromeHistoryAnalyzer extends FileUtility {
         }
     }
 
-    private int addEmptyStrings(HSSFSheet sheet, int sheetIndex, LocalDate prevLocalDate, LocalDate currentLocalDate) {
+    private int addEmptyStrings(HSSFSheet sheet, int sheetIndex, LocalDate prevLocalDate, LocalDate currentLocalDate, List<String> userNameHistory) {
         long cntDaysBetweenDates = ChronoUnit.DAYS.between(prevLocalDate, currentLocalDate);
 
         if (cntDaysBetweenDates > 1) {
@@ -211,15 +210,20 @@ public class ChromeHistoryAnalyzer extends FileUtility {
             while (cntDaysBetweenDates-- > 1) {
                 beforeCurrentDate = beforeCurrentDate.plusDays(1);
                 String dateString = beforeCurrentDate.format(localDateFormater);
-                addEmptyRow(sheet, sheetIndex++, dateString);
+                addEmptyRow(sheet, sheetIndex++, dateString, userNameHistory);
             }
         }
         return sheetIndex;
     }
 
-    private void addEmptyRow(HSSFSheet sheet, Integer sheetIndex, String date) {
+    private void addEmptyRow(HSSFSheet sheet, Integer sheetIndex, String date, List<String> userNameHistory) {
         HSSFRow emptyRow = sheet.createRow((short) (sheetIndex + 2));
         emptyRow.createCell(0).setCellValue(date);
+
+        for (int t = 0; t < userNameHistory.size(); t++) {
+            final int zeroValue = 0;
+            emptyRow.createCell(t + 1).setCellValue(zeroValue);
+        }
     }
 
     private int countNewVisits(String filePath) throws IOException {
