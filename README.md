@@ -44,4 +44,5 @@ P.S.: В общем и целом Вы можете просто создать 
     ```cmd
     start java -jar HistoryAnalyzer-1.0-SNAPSHOT.jar C:/Users/public/TestHistory contactsOpened=true log_on
     ```
-3)  После указания всех параметров, запускаем `startAnalyzer.bat` и в <path_to>/<result_history_folder>/Otchet появляется .xls файл: MOSGeneralOtchet-YYYY-MM-dd_HH_mm_ss.xls
+3)  После указания всех параметров, запускаем `startAnalyzer.bat` и в <path_to>/<result_history_folder>/Otchet появляется .xls файл: 
+    > MOSGeneralOtchet-YYYY-MM-dd_HH_mm_ss.xls
