@@ -32,7 +32,7 @@ public class ChromeHistoryAnalyzer extends FileUtility {
     public static final String GENERAL_OTCHET_FILE_TXT_NAME = "generalOtchet.txt";
     public static final String OTCHET_SHEET_NAME = "GeneralOtchetSheet";
 
-    private static final Logger log = Logger.getLogger(ChromeHistoryAnalyzer.class.getName());
+    private static final Logger logger = Logger.getLogger(ChromeHistoryAnalyzer.class.getName());
 
     private static final String HH_RU_RESUME_SEARCH_RESULT = "hhtmFrom=resume_search_result";
     private static final String HH_RU_RESUMES_CATALOG_RESULT = "hhtmFrom=resumes_catalog";
@@ -56,7 +56,7 @@ public class ChromeHistoryAnalyzer extends FileUtility {
     private String searchingString = "contactsOpened=true";
 
     public ChromeHistoryAnalyzer(String path, String searchingString) {
-        log.setLevel(Level.INFO);
+        logger.setLevel(Level.INFO);
         this.generalFolderFullPath = path;
         if (StringUtils.isNotBlank(searchingString)) {
             this.searchingString = searchingString;
@@ -68,7 +68,7 @@ public class ChromeHistoryAnalyzer extends FileUtility {
         try {
             generateStatistics();
         } catch (FileNotFoundException e) {
-            log.severe("Not found file " + e.getMessage());
+            logger.severe("Not found file " + e.getMessage());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -76,7 +76,7 @@ public class ChromeHistoryAnalyzer extends FileUtility {
 
     private void generateStatistics() throws IOException {
         String pathToResultHistory = this.generalFolderFullPath + "/" + RESULT_HISTORY_FOLDER_NAME_PATH;
-        log.info("pathToResultHistory: " + pathToResultHistory);
+        logger.info("pathToResultHistory: " + pathToResultHistory);
 
         File folder = new File(pathToResultHistory);
         List<File> listOfFiles = Arrays.asList(Objects.requireNonNull(folder.listFiles()));
@@ -85,8 +85,8 @@ public class ChromeHistoryAnalyzer extends FileUtility {
         List<String> userNameHistory = new ArrayList<>();
         List<String> datesHistory = new ArrayList<>();
         readUserNameAndDate(listOfFiles, userNameHistory, datesHistory);
-        log.info("Got table fields:");
-        log.info("userNameHistory List: " + userNameHistory + " datesHistory List: " + datesHistory);
+        logger.info("Got table fields:");
+        logger.info("userNameHistory List: " + userNameHistory + " datesHistory List: " + datesHistory);
         Collections.sort(datesHistory);
 
         Integer[][] table = fillTableWithVisitInfo(listOfFiles, userNameHistory, datesHistory);
@@ -113,10 +113,10 @@ public class ChromeHistoryAnalyzer extends FileUtility {
     private Integer[][] fillTableWithVisitInfo(List<File> listOfFiles, List<String> userNameHistory, List<String> datesHistory) {
         //String pathToResultHistory = this.generalFolderFullPath + "/" + RESULT_HISTORY_FOLDER_NAME_PATH;
         Integer[][] table = new Integer[userNameHistory.size()][datesHistory.size()]; // 1 - arg user, 2 - date
-        log.info("created table size: " + "user count: " + userNameHistory.size() + " dates count: " + datesHistory.size());
+        logger.info("created table size: " + "user count: " + userNameHistory.size() + " dates count: " + datesHistory.size());
         try {
             AtomicReference<String> currentUser = new AtomicReference<>(StringUtils.substringBefore(listOfFiles.get(0).getName(), HISTORY_RES));
-            log.info("Current User: " + currentUser + ", NameId: " + userNameHistory.indexOf(currentUser.get()));
+            logger.info("Current User: " + currentUser + ", NameId: " + userNameHistory.indexOf(currentUser.get()));
             listOfFiles.forEach(file -> {
                 String fileName = file.getName();
                 if (validateFileNameFormat(fileName)) {
@@ -124,23 +124,23 @@ public class ChromeHistoryAnalyzer extends FileUtility {
 
                     if (!StringUtils.equals(currentUser.get(), userFromFileName)) {
                         currentUser.set(userFromFileName);
-                        log.info("Current User: " + currentUser + ", NameId: " + userNameHistory.indexOf(currentUser.get()));
+                        logger.info("Current User: " + currentUser + ", NameId: " + userNameHistory.indexOf(currentUser.get()));
                     }
 
                     String dateFromFileName = StringUtils.substringBetween(fileName, HISTORY_RES, TXT_FORMAT);
-                    log.info("Current dateFromFileName: " + dateFromFileName);
+                    logger.info("Current dateFromFileName: " + dateFromFileName);
                     int dateInd = datesHistory.indexOf(dateFromFileName); // getting datesHistory index by dateFromFileName
                     String currFullFileName = file.getAbsolutePath();
                     try {
                         int userIndex = userNameHistory.indexOf(currentUser.get());
                         table[userIndex][dateInd] = countNewVisits(currFullFileName);
                     } catch (IOException ioException) {
-                        log.severe("Error while getting countNewVisita: " + ioException.getMessage());
+                        logger.severe("Error while getting countNewVisita: " + ioException.getMessage());
                     }
                 }
             });
         } catch (Exception e) {
-            log.severe("Error in fillTableWithVisitInfo: " + e.getMessage());
+            logger.severe("Error in fillTableWithVisitInfo: " + e.getMessage());
             System.exit(-1);
         }
 
@@ -151,14 +151,14 @@ public class ChromeHistoryAnalyzer extends FileUtility {
         if (FILE_NAME_PATTERN.matcher(fileName).find()) {
             return true;
         }
-        log.severe("Incorrect file name format: " + fileName);
+        logger.severe("Incorrect file name format: " + fileName);
 
         return false;
     }
 
     private void createOtchetXLS(List<String> userNameHistory, List<String> datesHistory, Integer[][] table) {
         try {
-            log.info("Creating XLS file, OK");
+            logger.info("Creating XLS file, OK");
             Date date = new Date();
             String formattedDate = standardDateFormat.format(date);
             String excelFileName = MOS_STRING + OTCHET_EXCEL_FILE_NAME + fileNameDateFormat.format(date) + OTCHET_EXCEL_FILE_NAME_FORMAT;
@@ -205,11 +205,11 @@ public class ChromeHistoryAnalyzer extends FileUtility {
 
             FileOutputStream fileOut = new FileOutputStream(filename);
             workbook.write(fileOut);
-            log.info("Writing XLS file, OK");
+            logger.info("Writing XLS file, OK");
             fileOut.close();
             workbook.close();
         } catch ( Exception ex ) {
-            log.severe("Error while generating excel file: " + ex.getMessage());
+            logger.severe("Error while generating excel file: " + ex.getMessage());
         }
     }
 
@@ -254,7 +254,7 @@ public class ChromeHistoryAnalyzer extends FileUtility {
             }
         }
 
-        log.info("visitNumber: " + visitNumber);
+        logger.info("visitNumber: " + visitNumber);
 
         return visitNumber;
     }
