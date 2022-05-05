@@ -1,9 +1,0 @@
-<component name="ArtifactManager">
-  <artifact type="jar" name="ChromeHistoryParser:jar">
-    <output-path>$PROJECT_DIR$/out/artifacts/ChromeHistoryParser_jar</output-path>
-    <root id="archive" name="ChromeHistoryParser.jar">
-      <element id="module-output" name="ChromeHistoryParser" />
-      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/xerial/sqlite-jdbc/3.34.0/sqlite-jdbc-3.34.0.jar" path-in-jar="/" />
-    </root>
-  </artifact>
-</component>
