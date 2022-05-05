@@ -41,13 +41,13 @@ public class ChromeHistoryAnalyzer extends FileUtility {
     private static final String RESULT_HISTORY_FOLDER_NAME_PATH = "ResultHistory";
     private static final String HISTORY_RES = "_historyRes_";
     private static final String TXT_FORMAT = ".txt";
-    private static final SimpleDateFormat fileNameDateFormat = new SimpleDateFormat("_yyyy-MM-dd_HH_mm_ss");
+    public static final SimpleDateFormat fileNameDateFormat = new SimpleDateFormat("_yyyy-MM-dd_HH_mm_ss");
     private static final DateTimeFormatter localDateFormater = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final String OTCHET_EXCEL_FILE_NAME = "GeneralOtchet";
     private static final String OTCHET_EXCEL_FILE_NAME_FORMAT = ".xls";
     private static final String USER_NAME_COL_NAME = "User";
     private static final String MOS_STRING = "MOS"; // it's for MOS only, prefix before
-    private static final SimpleDateFormat standardDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    public static final SimpleDateFormat standardDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     private static final Pattern FILE_NAME_PATTERN = Pattern.compile(".*_historyRes_\\d{4}-\\d{2}-\\d{2}\\.txt",
             Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
@@ -77,6 +77,7 @@ public class ChromeHistoryAnalyzer extends FileUtility {
     private void generateStatistics() throws IOException {
         String pathToResultHistory = this.generalFolderFullPath + "/" + RESULT_HISTORY_FOLDER_NAME_PATH;
         log.info("pathToResultHistory: " + pathToResultHistory);
+
         File folder = new File(pathToResultHistory);
         List<File> listOfFiles = Arrays.asList(Objects.requireNonNull(folder.listFiles()));
         Collections.sort(listOfFiles);
@@ -84,7 +85,8 @@ public class ChromeHistoryAnalyzer extends FileUtility {
         List<String> userNameHistory = new ArrayList<>();
         List<String> datesHistory = new ArrayList<>();
         readUserNameAndDate(listOfFiles, userNameHistory, datesHistory);
-        log.info("Got table fields");
+        log.info("Got table fields:");
+        log.info("userNameHistory List: " + userNameHistory + " datesHistory List: " + datesHistory);
         Collections.sort(datesHistory);
 
         Integer[][] table = fillTableWithVisitInfo(listOfFiles, userNameHistory, datesHistory);
@@ -111,27 +113,36 @@ public class ChromeHistoryAnalyzer extends FileUtility {
     private Integer[][] fillTableWithVisitInfo(List<File> listOfFiles, List<String> userNameHistory, List<String> datesHistory) {
         //String pathToResultHistory = this.generalFolderFullPath + "/" + RESULT_HISTORY_FOLDER_NAME_PATH;
         Integer[][] table = new Integer[userNameHistory.size()][datesHistory.size()]; // 1 - arg user, 2 - date
-        AtomicInteger userInd = new AtomicInteger(0);
-        AtomicReference<String> prevUser = new AtomicReference<>(StringUtils.substringBefore(listOfFiles.get(0).getName(), HISTORY_RES));
-        listOfFiles.forEach(file -> {
-            String fileName = file.getName();
-            if (validateFileNameFormat(fileName)) {
-                String user = StringUtils.substringBefore(fileName, HISTORY_RES);
-                if (!StringUtils.equals(prevUser.get(), user)) {
-                    log.info("Prepared user: " + prevUser);
-                    prevUser.set(user);
-                    userInd.getAndIncrement();
+        log.info("created table size: " + "user count: " + userNameHistory.size() + " dates count: " + datesHistory.size());
+        try {
+            AtomicReference<String> currentUser = new AtomicReference<>(StringUtils.substringBefore(listOfFiles.get(0).getName(), HISTORY_RES));
+            log.info("Current User: " + currentUser + ", NameId: " + userNameHistory.indexOf(currentUser.get()));
+            listOfFiles.forEach(file -> {
+                String fileName = file.getName();
+                if (validateFileNameFormat(fileName)) {
+                    String userFromFileName = StringUtils.substringBefore(fileName, HISTORY_RES);
+
+                    if (!StringUtils.equals(currentUser.get(), userFromFileName)) {
+                        currentUser.set(userFromFileName);
+                        log.info("Current User: " + currentUser + ", NameId: " + userNameHistory.indexOf(currentUser.get()));
+                    }
+
+                    String dateFromFileName = StringUtils.substringBetween(fileName, HISTORY_RES, TXT_FORMAT);
+                    log.info("Current dateFromFileName: " + dateFromFileName);
+                    int dateInd = datesHistory.indexOf(dateFromFileName); // getting datesHistory index by dateFromFileName
+                    String currFullFileName = file.getAbsolutePath();
+                    try {
+                        int userIndex = userNameHistory.indexOf(currentUser.get());
+                        table[userIndex][dateInd] = countNewVisits(currFullFileName);
+                    } catch (IOException ioException) {
+                        log.severe("Error while getting countNewVisita: " + ioException.getMessage());
+                    }
                 }
-                String date = StringUtils.substringBetween(fileName, HISTORY_RES, TXT_FORMAT);
-                int dateInd = datesHistory.indexOf(date);
-                String currFullFileName = file.getAbsolutePath();
-                try {
-                    table[userInd.get()][dateInd] = countNewVisits(currFullFileName);
-                } catch (IOException ioException) {
-                    log.severe("Error while getting countNewVisita: " + ioException.getMessage());
-                }
-            }
-        });
+            });
+        } catch (Exception e) {
+            log.severe("Error in fillTableWithVisitInfo: " + e.getMessage());
+            System.exit(-1);
+        }
 
         return table;
     }
@@ -242,6 +253,8 @@ public class ChromeHistoryAnalyzer extends FileUtility {
                 visitNumber++;
             }
         }
+
+        log.info("visitNumber: " + visitNumber);
 
         return visitNumber;
     }
