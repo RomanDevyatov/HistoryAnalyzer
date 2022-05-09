@@ -29,13 +29,13 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 
-public class ChromeHistoryAnalyzer extends FileUtility {
+public class HistoryAnalyzer extends FileUtility {
 
     public static final String OTCHET_FOLDER_NAME = "Otchet";
     public static final String GENERAL_OTCHET_FILE_TXT_NAME = "generalOtchet.txt";
     public static final String OTCHET_SHEET_NAME = "GeneralOtchetSheet";
 
-    private static final Logger logger = Logger.getLogger(ChromeHistoryAnalyzer.class.getName());
+    private static final Logger logger = Logger.getLogger(HistoryAnalyzer.class.getName());
 
     private static final String HH_RU_RESUME_SEARCH_RESULT = "hhtmFrom=resume_search_result";
     private static final String HH_RU_RESUMES_CATALOG_RESULT = "hhtmFrom=resumes_catalog";
@@ -58,7 +58,7 @@ public class ChromeHistoryAnalyzer extends FileUtility {
     private final String generalFolderFullPath;
     private String searchingString = "contactsOpened=true";
 
-    public ChromeHistoryAnalyzer(String path, String searchingString) {
+    public HistoryAnalyzer(String path, String searchingString) {
         logger.setLevel(Level.INFO);
         this.generalFolderFullPath = path;
         if (StringUtils.isNotBlank(searchingString)) {

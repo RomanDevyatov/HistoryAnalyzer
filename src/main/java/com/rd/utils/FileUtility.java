@@ -1,6 +1,6 @@
 package com.rd.utils;
 
-import com.rd.ChromeHistoryAnalyzer;
+import com.rd.HistoryAnalyzer;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -17,7 +17,7 @@ public class FileUtility {
     public FileUtility() {}
 
     protected void createFolder(String path) {
-        String pathToOtchetTxtFile = String.valueOf(Paths.get(path, ChromeHistoryAnalyzer.OTCHET_FOLDER_NAME));
+        String pathToOtchetTxtFile = String.valueOf(Paths.get(path, HistoryAnalyzer.OTCHET_FOLDER_NAME));
         String msg = "Folder " + pathToOtchetTxtFile;
         msg += new File(pathToOtchetTxtFile).mkdirs() ? " is created" : " already exists";
         log.info(msg);
@@ -25,7 +25,7 @@ public class FileUtility {
 
     protected void createStatisticFile(String path) throws IOException {
         createFolder(path);
-        Path filePath = Paths.get(path, ChromeHistoryAnalyzer.OTCHET_FOLDER_NAME, ChromeHistoryAnalyzer.GENERAL_OTCHET_FILE_TXT_NAME);
+        Path filePath = Paths.get(path, HistoryAnalyzer.OTCHET_FOLDER_NAME, HistoryAnalyzer.GENERAL_OTCHET_FILE_TXT_NAME);
         if (!Files.exists(filePath)) {
             Files.createFile(filePath);
         } else {

@@ -13,12 +13,12 @@ import java.util.logging.SimpleFormatter;
 
 public class Main {
 
-    private static final Logger logger = Logger.getLogger(ChromeHistoryAnalyzer.class.getName());
+    private static final Logger logger = Logger.getLogger(HistoryAnalyzer.class.getName());
     public static Handler fileHandler = null;
 
     public static void setup(String generalFolderPath) {
         try {
-            String formattedDate = ChromeHistoryAnalyzer.standardDateFormat.format(new Date());
+            String formattedDate = HistoryAnalyzer.standardDateFormat.format(new Date());
             String fileStr = "analyzer" + formattedDate + ".log";
             String pathToLogFile = Paths.get(generalFolderPath, "log", "Analyzer", fileStr.replaceAll(":", "_")).normalize().toString();
             File logFile = new File(pathToLogFile);
@@ -60,8 +60,8 @@ public class Main {
             }
 
             logger.info("Args: " + Arrays.stream(args));
-            ChromeHistoryAnalyzer chromeHistoryAnalyzer = new ChromeHistoryAnalyzer(generalFolderPath, searchingString);
-            chromeHistoryAnalyzer.startStatisticProcess();
+            HistoryAnalyzer historyAnalyzer = new HistoryAnalyzer(generalFolderPath, searchingString);
+            historyAnalyzer.startStatisticProcess();
             logger.info("Program has finished.");
         } catch (Exception e) {
             logger.severe("Program has finished with error: " + e.getMessage());
