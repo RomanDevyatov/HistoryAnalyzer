@@ -14,7 +14,7 @@ import java.util.logging.SimpleFormatter;
 public class Main {
 
     private static final Logger logger = Logger.getLogger(ChromeHistoryAnalyzer.class.getName());
-    private static Handler fileHandler = null;
+    public static Handler fileHandler = null;
 
     public static void setup(String generalFolderPath) {
         try {
@@ -37,10 +37,19 @@ public class Main {
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String... args) {
         try {
+            if (args.length == 0) {
+                logger.info("no args, add path to ResultHistory folder");
+                System.exit(0);
+            }
+
+            logger.info("PROGRAM PARAMETERS, Args: " + Arrays.asList(args));
+
             logger.info("program started at " + (new GregorianCalendar()).toZonedDateTime());
+
             String generalFolderPath = args[0];
+
             String searchingString = "";
             if (args.length == 2) {
                 searchingString = args[1];

@@ -1,17 +1,18 @@
 package com.rd;
 
+import com.rd.models.HistoryRecord;
+import com.rd.utils.FileUtility;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.FileOutputStream;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -23,7 +24,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 
 public class ChromeHistoryAnalyzer extends FileUtility {
@@ -67,6 +70,10 @@ public class ChromeHistoryAnalyzer extends FileUtility {
     public void startStatisticProcess() {
         try {
             generateStatistics();
+
+            if (Main.fileHandler != null) {
+                Main.fileHandler.close();
+            }
         } catch (FileNotFoundException e) {
             logger.severe("Not found file " + e.getMessage());
         } catch (IOException e) {
@@ -238,18 +245,24 @@ public class ChromeHistoryAnalyzer extends FileUtility {
     }
 
     private int countNewVisits(String filePath) throws IOException {
-        Set<String> recSet = new HashSet<>();
-        FileInputStream inputStream = new FileInputStream(filePath);
-        BufferedReader bfReader = new BufferedReader(new InputStreamReader(inputStream));
-        int visitNumber = 0;
-        String line;
-        while ((line = bfReader.readLine()) != null) {
-            recSet.add(line);
+        Set<String> historyFileLinesSet;
+        try (Stream<String> lines = Files.lines(Paths.get(filePath))) {
+            historyFileLinesSet = lines.collect(Collectors.toSet());
         }
-        bfReader.close();
 
-        for (String s : recSet) {
-            if (StringUtils.contains(s, this.searchingString)) {
+        Set<HistoryRecord> historyRecordSet = new HashSet<>();
+        for (String historyLine : historyFileLinesSet) {
+            String[] args = historyLine.split(HistoryRecord.HISTORY_RECORD_DELEMITER, 2);
+            if (args.length == 2) {
+                historyRecordSet.add(new HistoryRecord(args[0], args[1]));
+            } else {
+                logger.info("This line was passed: \"" + historyLine + "\"");
+            }
+        }
+
+        int visitNumber = 0;
+        for (HistoryRecord hr : historyRecordSet) {
+            if (StringUtils.contains(hr.getUrl(), this.searchingString)) {
                 visitNumber++;
             }
         }
